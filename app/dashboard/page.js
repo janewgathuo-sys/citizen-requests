@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 export default function Dashboard() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [requests, setRequests] = useState([]);
 
   useEffect(() => {
@@ -24,18 +25,24 @@ export default function Dashboard() {
       return;
     }
 
-    // get the name of the user
+    // get the name and role of the user
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, role")
       .eq("id", user.id)
       .single();
-    if (profile) setName(profile.full_name);
+    if (profile) {
+      setName(profile.full_name);
+      if (profile.role === "admin") {
+        setIsAdmin(true);
+      }
+    }
 
     // get the requests (a citizen only sees their own)
     const { data: list } = await supabase
       .from("requests")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     setRequests(list || []);
   }
@@ -57,9 +64,16 @@ export default function Dashboard() {
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Welcome, {name}</h1>
-          <button onClick={logout} className="bg-gray-800 text-white px-4 py-2 rounded">
-            Logout
-          </button>
+          <div className="flex gap-3">
+            {isAdmin && (
+              <Link href="/admin" className="bg-purple-600 text-white px-4 py-2 rounded">
+                Admin Dashboard
+              </Link>
+            )}
+            <button onClick={logout} className="bg-gray-800 text-white px-4 py-2 rounded">
+              Logout
+            </button>
+          </div>
         </div>
 
         <div className="flex justify-between items-center mb-4">
@@ -82,8 +96,11 @@ export default function Dashboard() {
               </span>
             </div>
             <p className="text-sm mt-1">Location: {r.location}</p>
+            <p className="text-sm text-gray-500">
+              Submitted: {new Date(r.created_at).toLocaleDateString()}
+            </p>
             <p className="mt-2">{r.description}</p>
-                        {r.image_url && (
+            {r.image_url && (
               <img src={r.image_url} alt="request photo" className="mt-3 w-48 rounded" />
             )}
           </div>
