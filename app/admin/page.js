@@ -163,6 +163,9 @@ export default function AdminPage() {
               </span>
             </div>
             <p className="text-sm mt-1">Location: {r.location}</p>
+                        <p className="text-sm text-gray-500">
+              Submitted: {new Date(r.created_at).toLocaleDateString()}
+            </p>
             <p className="mt-2">{r.description}</p>
             {r.image_url && (
               <img src={r.image_url} alt="request photo" className="mt-3 w-48 rounded" />
